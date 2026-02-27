@@ -1,0 +1,14 @@
+version: 2
+
+sources:
+  - name: olist
+    database: olist_raw
+    tables:
+      - name: customers
+      - name: order_items
+      - name: order_reviews
+      - name: orders
+      - name: payments
+      - name: product_category_translation
+      - name: products
+      - name: sellers
