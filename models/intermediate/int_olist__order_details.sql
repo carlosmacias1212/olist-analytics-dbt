@@ -41,11 +41,11 @@ joined as (
 
         -- Order-level info
         o.order_status,
-        o.order_purchase_timestamp,
+        o.order_purchased_at,
         o.order_approved_at,
-        o.order_delivered_carrier_date,
-        o.order_delivered_customer_date,
-        o.order_estimated_delivery_date,
+        o.order_delivered_to_carrier_at,
+        o.order_delivered_at,
+        o.order_estimated_delivery_at,
 
         -- Aggregated metrics
         ot.total_payment_value,
@@ -59,21 +59,21 @@ joined as (
 
         -- Derived metrics (null-safe)
         case 
-            when o.order_delivered_customer_date is not null
-            then datediff(day, o.order_purchase_timestamp, o.order_delivered_customer_date)
+            when o.order_delivered_at is not null
+            then datediff(day, o.order_purchased_at, o.order_delivered_at)
         end as days_to_deliver_actual,
 
         case
-            when o.order_estimated_delivery_date is not null
-            then datediff(day, o.order_purchase_timestamp, o.order_estimated_delivery_date)
+            when o.order_estimated_delivery_at is not null
+            then datediff(day, order_purchased_at, o.order_estimated_delivery_at)
         end as days_to_deliver_estimated,
 
         -- Optional KPI flags
-        case when o.order_delivered_customer_date is not null then true else false end as is_delivered,
+        case when o.order_delivered_at is not null then true else false end as is_delivered,
         case 
-            when o.order_delivered_customer_date is not null 
-                 and o.order_estimated_delivery_date is not null
-                 and o.order_delivered_customer_date > o.order_estimated_delivery_date
+            when o.order_delivered_at is not null 
+                 and o.order_estimated_delivery_at is not null
+                 and o.order_delivered_at > o.order_estimated_delivery_at
             then true 
             else false 
         end as is_late
