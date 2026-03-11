@@ -50,7 +50,7 @@ order_details as (
         -- Aggregated metrics
         ot.total_payment_value,
         ot.max_installments,
-        ot.distinct_payment_types,
+        ot.order_payment_type_count,
 
         -- Item-level metrics
         oi.price as item_price,
