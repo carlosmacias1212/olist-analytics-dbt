@@ -24,13 +24,13 @@ order_totals as (
         order_id,
         sum(payment_value) as total_payment_value,
         max(payment_installments) as max_installments,
-        count(distinct payment_type) as distinct_payment_types
+        count(distinct payment_type) as order_payment_type_count
     from payments
     group by order_id
 ),
 
 -- Combine items, orders, and aggregated payments
-joined as (
+order_details as (
     select
         -- Identifiers
         oi.order_id,
@@ -65,7 +65,7 @@ joined as (
 
         case
             when o.order_estimated_delivery_at is not null
-            then datediff(day, order_purchased_at, o.order_estimated_delivery_at)
+            then datediff(day, o.order_purchased_at, o.order_estimated_delivery_at)
         end as days_to_deliver_estimated,
 
         -- Optional KPI flags
@@ -82,4 +82,4 @@ joined as (
     left join order_totals ot on oi.order_id = ot.order_id
 )
 
-select * from joined
+select * from order_details
