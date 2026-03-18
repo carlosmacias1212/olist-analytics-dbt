@@ -3,15 +3,21 @@ version: 2
 models:
 
   - name: fct_orders
-    description: One row per order; central fact table for order-level analytics
+    description: >
+      One row per order, combining order-level information, aggregated item metrics,
+      and delivery KPIs. Central fact table for analyzing revenue, order volume,
+      delivery performance, and customer behavior.
     columns:
       - name: order_id
-        description: Primary key of the order
+        description: >
+          Unique identifier for each order (UUID). Serves as the primary key for this fact table.
         tests:
           - not_null
           - unique
       - name: customer_unique_id
-        description: Foreign key to dim_customers.customer_unique_id
+        description: >
+          Real-world customer identifier. Links to `dim_customers` to analyze
+          customer lifetime metrics and behavior.
         tests:
           - not_null
           - relationships:
@@ -19,11 +25,11 @@ models:
                 to: ref('dim_customers')
                 field: customer_unique_id
       - name: order_purchased_at
-        description: Timestamp of purchase
+        description: Timestamp when the customer placed the order.
         tests:
           - not_null
       - name: order_status
-        description: Final status of the order
+        description: Final status of the order.
         tests:
           - accepted_values:
               arguments: 
@@ -37,27 +43,29 @@ models:
                   - canceled
                   - unavailable
       - name: order_revenue
-        description: Sum of item price + freight for the order
+        description: Total revenue collected from this order, including item prices and shipping.
       - name: items_revenue
-        description: Sum of item prices only
+        description: Sum of all item prices in the order, excluding freight.
       - name: freight_revenue
-        description: Sum of freight costs
+        description: Total shipping revenue for this order.
       - name: total_items
-        description: Number of items in the order
+        description: Number of items in this order.
       - name: days_to_deliver_actual
-        description: Actual days from purchase to delivery
+        description: Actual number of days from purchase to delivery. Null if not delivered.
       - name: days_to_deliver_estimated
-        description: Estimated days from purchase to delivery
+        description: Number of days promised for delivery.
       - name: is_delivered
-        description: Flag indicating if order was delivered
+        description: True if the order reached the customer, False otherwise.
       - name: is_late
-        description: Flag indicating if order was delivered after estimated delivery
+        description: True if the order was delivered after the promised delivery date.
 
   - name: fct_order_items
-    description: One row per order item; includes item-level metrics for price, freight, delivery, and KPIs
+    description: >
+      One row per order item. Combines product, seller, and order information
+      to provide detailed item-level metrics for revenue, shipping, and delivery performance.
     columns:
       - name: order_id
-        description: Foreign key to fct_orders
+        description: Parent order identifier. Links to `fct_orders`.
         tests:
           - not_null
           - relationships:
@@ -65,11 +73,11 @@ models:
                 to: ref('fct_orders')
                 field: order_id
       - name: order_item_id
-        description: Sequence number of the item within the order
+        description: Sequence number of the item within the order.
         tests:
           - not_null
       - name: product_id
-        description: Foreign key to dim_products
+        description: Links to `dim_products` for product-level performance analysis.
         tests:
           - not_null
           - relationships:
@@ -77,7 +85,7 @@ models:
                 to: ref('dim_products')
                 field: product_id
       - name: seller_id
-        description: Foreign key to dim_sellers
+        description: Links to `dim_sellers` for seller-level metrics and performance analysis.
         tests:
           - not_null
           - relationships:
@@ -85,16 +93,16 @@ models:
                 to: ref('dim_sellers')
                 field: seller_id
       - name: item_price
-        description: Price of the individual item
+        description: Price of the individual item (excluding freight).
       - name: item_freight
-        description: Freight cost of the item
+        description: Freight cost of this item.
       - name: total_price_per_item
-        description: Sum of item_price + item_freight
+        description: Sum of item_price and item_freight.
       - name: days_to_deliver_actual
-        description: Actual delivery days for this item
+        description: Actual delivery days for this item. Null if not delivered.
       - name: days_to_deliver_estimated
-        description: Estimated delivery days
+        description: Estimated delivery days for this item.
       - name: is_delivered
-        description: Flag indicating if the item was delivered
+        description: True if this item reached the customer.
       - name: is_late
-        description: Flag indicating if the item was delivered late
+        description: True if this item was delivered after the estimated delivery date.
