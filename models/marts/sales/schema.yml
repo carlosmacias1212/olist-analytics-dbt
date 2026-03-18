@@ -44,6 +44,8 @@ models:
                   - unavailable
       - name: order_revenue
         description: Total revenue collected from this order, including item prices and shipping.
+        tests:
+          - assert_non_negative
       - name: items_revenue
         description: Sum of all item prices in the order, excluding freight.
       - name: freight_revenue
@@ -52,6 +54,8 @@ models:
         description: Number of items in this order.
       - name: days_to_deliver_actual
         description: Actual number of days from purchase to delivery. Null if not delivered.
+        tests: 
+           - assert_delivered_has_date
       - name: days_to_deliver_estimated
         description: Number of days promised for delivery.
       - name: is_delivered
