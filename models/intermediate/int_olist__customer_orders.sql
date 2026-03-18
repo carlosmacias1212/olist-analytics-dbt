@@ -21,7 +21,7 @@ orders_rollup as (
 
     select
         order_id,
-        customer_id,
+        customer_unique_id,
 
         min(order_purchased_at) as order_purchased_at,
 
@@ -37,7 +37,7 @@ orders_rollup as (
 
     group by
         order_id,
-        customer_id
+        customer_unique_id
 
 ),
 
@@ -82,7 +82,7 @@ customer_orders as (
     from customers c
 
     left join orders_rollup o
-        on c.customer_id = o.customer_id
+        on c.customer_unique_id = o.customer_unique_id
 
     group by
         c.customer_unique_id

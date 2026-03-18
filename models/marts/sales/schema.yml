@@ -1,0 +1,100 @@
+version: 2
+
+models:
+
+  - name: fct_orders
+    description: One row per order; central fact table for order-level analytics
+    columns:
+      - name: order_id
+        description: Primary key of the order
+        tests:
+          - not_null
+          - unique
+      - name: customer_unique_id
+        description: Foreign key to dim_customers.customer_unique_id
+        tests:
+          - not_null
+          - relationships:
+              arguments: 
+                to: ref('dim_customers')
+                field: customer_unique_id
+      - name: order_purchased_at
+        description: Timestamp of purchase
+        tests:
+          - not_null
+      - name: order_status
+        description: Final status of the order
+        tests:
+          - accepted_values:
+              arguments: 
+                values:
+                  - created
+                  - approved
+                  - invoiced
+                  - processing
+                  - shipped
+                  - delivered
+                  - canceled
+                  - unavailable
+      - name: order_revenue
+        description: Sum of item price + freight for the order
+      - name: items_revenue
+        description: Sum of item prices only
+      - name: freight_revenue
+        description: Sum of freight costs
+      - name: total_items
+        description: Number of items in the order
+      - name: days_to_deliver_actual
+        description: Actual days from purchase to delivery
+      - name: days_to_deliver_estimated
+        description: Estimated days from purchase to delivery
+      - name: is_delivered
+        description: Flag indicating if order was delivered
+      - name: is_late
+        description: Flag indicating if order was delivered after estimated delivery
+
+  - name: fct_order_items
+    description: One row per order item; includes item-level metrics for price, freight, delivery, and KPIs
+    columns:
+      - name: order_id
+        description: Foreign key to fct_orders
+        tests:
+          - not_null
+          - relationships:
+              arguments: 
+                to: ref('fct_orders')
+                field: order_id
+      - name: order_item_id
+        description: Sequence number of the item within the order
+        tests:
+          - not_null
+      - name: product_id
+        description: Foreign key to dim_products
+        tests:
+          - not_null
+          - relationships:
+              arguments: 
+                to: ref('dim_products')
+                field: product_id
+      - name: seller_id
+        description: Foreign key to dim_sellers
+        tests:
+          - not_null
+          - relationships:
+              arguments: 
+                to: ref('dim_sellers')
+                field: seller_id
+      - name: item_price
+        description: Price of the individual item
+      - name: item_freight
+        description: Freight cost of the item
+      - name: total_price_per_item
+        description: Sum of item_price + item_freight
+      - name: days_to_deliver_actual
+        description: Actual delivery days for this item
+      - name: days_to_deliver_estimated
+        description: Estimated delivery days
+      - name: is_delivered
+        description: Flag indicating if the item was delivered
+      - name: is_late
+        description: Flag indicating if the item was delivered late

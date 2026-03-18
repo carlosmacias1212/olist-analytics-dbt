@@ -10,7 +10,7 @@ with order_details as (
 orders_rollup as (
     select
         order_id,
-        customer_id,
+        customer_unique_id,
 
         min(order_purchased_at) as order_purchased_at,
         max(order_status) as order_status,
@@ -35,7 +35,7 @@ orders_rollup as (
     from order_details
     group by
         order_id,
-        customer_id
+        customer_unique_id
 )
 
 select *

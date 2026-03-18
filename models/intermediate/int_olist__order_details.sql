@@ -18,6 +18,11 @@ payments as (
     from {{ ref('stg_olist__payments') }}
 ),
 
+customers as (
+    select *
+    from {{ ref('stg_olist__customers') }}
+),
+
 -- Aggregate payments per order
 order_totals as (
     select
@@ -37,7 +42,7 @@ order_details as (
         oi.order_item_id,
         oi.product_id,
         oi.seller_id,
-        o.customer_id,
+        c.customer_unique_id,
 
         -- Order-level info
         o.order_status,
@@ -80,6 +85,7 @@ order_details as (
     from order_items oi
     left join orders o on oi.order_id = o.order_id
     left join order_totals ot on oi.order_id = ot.order_id
+    left join customers c on o.customer_id = c.customer_id
 )
 
 select * from order_details
