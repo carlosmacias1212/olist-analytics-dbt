@@ -4,12 +4,13 @@
 
 with customers as (
 
-    select distinct
+    select
         customer_unique_id,
-        customer_zip_code_prefix,
-        customer_city,
-        customer_state
+        min(customer_zip_code_prefix) as customer_zip_code_prefix,
+        min(customer_city) as customer_city,
+        min(customer_state) as customer_state
     from {{ ref('stg_olist__customers') }}
+    group by customer_unique_id
 
 ),
 
