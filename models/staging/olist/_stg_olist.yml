@@ -1,0 +1,188 @@
+version: 2
+
+models:
+
+  - name: stg_olist__customers
+    description: One customer_id per row
+    columns:
+      - name: customer_id
+        description: Primary key of the customer record
+        tests:
+          - not_null
+          - unique
+      - name: customer_unique_id
+        description: Identifier representing the real-world customer across orders
+        tests:
+          - not_null
+      - name: customer_zip_code_prefix
+        description: First 5 digits of Brazilian ZIP code
+      - name: customer_city
+        description: Customer city
+      - name: customer_state
+        description: Two-letter Brazilian state code
+
+  - name: stg_olist__orders
+    description: One order per row
+    columns:
+      - name: order_id
+        description: Primary key of the order
+        tests:
+          - not_null
+          - unique
+      - name: customer_id
+        description: Foreign key to customers
+        tests:
+          - not_null
+      - name: order_status
+        description: Order status
+        tests:
+          - not_null
+          - accepted_values:
+              arguments: 
+                values:
+                  - created
+                  - approved
+                  - invoiced
+                  - processing
+                  - shipped
+                  - delivered
+                  - canceled
+                  - unavailable
+      - name: order_purchased_at
+        description: Timestamp of purchase
+      - name: order_approved_at
+        description: Timestamp when payment was approved
+      - name: order_delivered_to_carrier_at
+        description: Timestamp when order was handed to carrier
+      - name: order_delivered_at
+        description: Timestamp when order was delivered to customer
+      - name: order_estimated_delivery_at
+        description: Promised delivery timestamp
+
+  - name: stg_olist__order_items
+    description: One row per product in an order
+    columns:
+      - name: order_id
+        description: Foreign key to orders
+        tests:
+          - not_null
+      - name: order_item_id
+        description: Sequence number of item within the order
+        tests:
+          - not_null
+      - name: product_id
+        description: Foreign key to products
+      - name: seller_id
+        description: Foreign key to sellers
+      - name: shipping_limit_at
+        description: Deadline for seller to hand order to carrier
+      - name: price
+        description: Unit price in BRL
+      - name: freight_value
+        description: Freight cost in BRL
+
+  - name: stg_olist__order_reviews
+    description: One review per review_id
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - review_id
+              - order_id
+    columns:
+      - name: review_id
+        description: Primary key of review
+        tests:
+          - not_null
+      - name: order_id
+        description: Foreign key to orders
+        tests:
+          - not_null
+      - name: review_score
+        description: Rating from 1 to 5
+        tests:
+          - not_null
+          - accepted_values:
+              arguments: 
+                values: [1, 2, 3, 4, 5]
+      - name: review_comment_title
+        description: Optional review title
+      - name: review_comment_message
+        description: Optional review message
+      - name: review_created_at
+        description: Timestamp when review was created
+      - name: review_answered_at
+        description: Timestamp when review was answered
+
+  - name: stg_olist__payments
+    description: One payment transaction per row
+    columns:
+      - name: order_id
+        description: Foreign key to orders
+        tests:
+          - not_null
+      - name: payment_sequential
+        description: Sequence number of payment for an order
+        tests:
+          - not_null
+      - name: payment_type
+        description: Payment method
+      - name: payment_installments
+        description: Number of installments
+        tests:
+          - not_null
+      - name: payment_value
+        description: Payment amount in BRL
+        tests:
+          - not_null
+
+  - name: stg_olist__products
+    description: One product per product_id
+    columns:
+      - name: product_id
+        description: Primary key of the product
+        tests:
+          - not_null
+          - unique
+      - name: product_category_name
+        description: Product category name in Portuguese
+      - name: product_name_length
+        description: Length of product name
+      - name: product_description_length
+        description: Length of product description
+      - name: product_photos_qty
+        description: Number of product photos
+      - name: product_weight_g
+        description: Weight in grams
+      - name: product_length_cm
+        description: Length in cm
+      - name: product_height_cm
+        description: Height in cm
+      - name: product_width_cm
+        description: Width in cm
+
+  - name: stg_olist__product_category_translation
+    description: Product category translations
+    columns:
+      - name: product_category_name
+        description: Category name in Portuguese
+        tests:
+          - not_null
+          - unique
+      - name: product_category_name_english
+        description: Category name in English
+
+  - name: stg_olist__sellers
+    description: One seller per seller_id
+    columns:
+      - name: seller_id
+        description: Primary key of the seller
+        tests:
+          - not_null
+          - unique
+      - name: seller_zip_code_prefix
+        description: First 5 digits of ZIP code
+      - name: seller_city
+        description: Seller city
+      - name: seller_state
+        description: Two-letter Brazilian state code

@@ -1,0 +1,125 @@
+version: 2
+
+sources:
+  - name: olist
+    database: olist_raw
+    schema: olist
+    description: Raw data from the Brazilian E-commerce Olist platform (public Kaggle dataset)
+    tables:
+      - name: customers
+        description: Customer dimension — unique customers with location inf
+        columns:
+          - name: customer_id
+            description: Primary key — unique order-linked customer identifier (UUID)
+            tests:
+              - unique
+              - not_null
+          - name: customer_unique_id
+            description: Anonymized unique customer identifier (same person, multiple orders)
+            tests:
+              - not_null
+          - name: customer_zip_code_prefix
+            description: First 5 digits of Brazilian zip code
+          - name: customer_city
+            description: City name
+          - name: customer_state
+            description: Two-letter Brazilian state code
+      - name: orders
+        description: Core orders table — one row per order. Contains status and all key timestamps in the order lifecycle.
+        columns:
+          - name: order_id
+            description: Primary key — unique order identifier (UUID)
+            tests:
+              - unique
+              - not_null
+
+          - name: customer_id
+            description: Foreign key to customers.customer_id
+            tests:
+              - not_null
+
+          - name: order_status
+            description: Current/final status of the order (e.g., delivered, shipped, canceled, invoiced, processing, created, approved)
+            tests:
+            - accepted_values:
+                arguments:
+                  values:
+                    - created
+                    - approved
+                    - invoiced
+                    - processing
+                    - shipped
+                    - delivered
+                    - canceled
+                    - unavailable
+
+          - name: order_purchase_timestamp
+            description: Timestamp when the purchase was approved (customer clicked "buy")
+
+          - name: order_approved_at
+            description: Timestamp when payment was approved by the payment system (often same as purchase, but can differ)
+
+          - name: order_delivered_carrier_date
+            description: Timestamp when order was handed to the carrier (logistics handoff)
+
+          - name: order_delivered_customer_date
+            description: Timestamp when order was actually delivered to customer (actual delivery date)
+
+          - name: order_estimated_delivery_date
+            description: Original promised delivery date shown to customer at purchase
+      - name: order_items
+        description: Line items per order — one row per product in an order. Includes price, freight, and seller handoff deadline.
+        columns:
+          - name: order_id
+            description: Foreign key to orders.order_id
+            tests:
+              - not_null
+
+          - name: order_item_id
+            description: Sequence number of the item within the order (1, 2, 3... for multi-item orders)
+            tests:
+              - not_null
+
+          - name: product_id
+            description: Foreign key to products.product_id
+
+          - name: seller_id
+            description: Foreign key to sellers.seller_id
+
+          - name: shipping_limit_date
+            description: Deadline timestamp for seller to hand order to carrier (logistics SLA cutoff)
+
+          - name: price
+            description: Unit price of the item in BRL
+
+          - name: freight_value
+            description: Freight/shipping cost paid by the customer for this item in BRL
+      - name: order_reviews
+      - name: payments
+        description: Payment details — one row per payment transaction (multiple possible per order)
+        columns:
+          - name: order_id
+            description: Foreign key to orders.order_id
+            tests:
+              - not_null
+
+          - name: payment_sequential
+            description: Sequence number for multiple payments on the same order (1, 2, 3...)
+            tests:
+              - not_null
+
+          - name: payment_type
+            description: Payment method (credit_card, boleto, voucher, debit_card, not_defined)
+
+          - name: payment_installments
+            description: Number of installments chosen for credit card payments (1 = no installments)
+            tests:
+              - not_null
+
+          - name: payment_value
+            description: Amount paid in BRL for this payment transaction
+            tests:
+              - not_null
+      - name: product_category_translation
+      - name: products
+      - name: sellers
