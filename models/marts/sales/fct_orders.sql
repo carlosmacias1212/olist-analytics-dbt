@@ -2,9 +2,21 @@
 -- Grain: one row per order
 -- Central fact table for order-level analytics
 
+{{ config(
+    materialized='incremental',
+    unique_key='order_id'
+) }}
+
 with order_details as (
     select *
     from {{ ref('int_olist__order_details') }}
+
+    {% if is_incremental() %}
+        where loaded_at > (
+            select coalesce(max(loaded_at), '1900-01-01'::timestamp)
+            from {{ this }}
+        )
+    {% endif %}
 ),
 
 orders_rollup as (
@@ -24,13 +36,16 @@ orders_rollup as (
         count(*) as total_items,
         count(distinct product_id) as num_distinct_products,
 
-        -- delivery metrics (null-safe)
+        -- delivery metrics
         max(days_to_deliver_actual) as days_to_deliver_actual,
         max(days_to_deliver_estimated) as days_to_deliver_estimated,
 
         -- KPI flags
-        max(is_delivered) as is_delivered,  -- True if any item delivered
-        max(is_late) as is_late             -- True if any item delivered late
+        max(is_delivered) as is_delivered,
+        max(is_late) as is_late,
+
+        -- 👇 CRITICAL for incremental tracking
+        max(loaded_at) as loaded_at
 
     from order_details
     group by
