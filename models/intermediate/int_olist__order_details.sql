@@ -51,6 +51,7 @@ order_details as (
         o.order_delivered_to_carrier_at,
         o.order_delivered_at,
         o.order_estimated_delivery_at,
+        o.loaded_at,
 
         -- Aggregated metrics
         ot.total_payment_value,

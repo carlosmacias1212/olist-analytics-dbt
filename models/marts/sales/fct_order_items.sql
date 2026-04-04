@@ -1,11 +1,22 @@
 -- models/marts/sales/fct_order_items.sql
 -- Grain: one row per order item
 
+{{ config(
+    materialized='incremental',
+    unique_key=['order_id', 'order_item_id']
+) }}
+
 with order_details as (
 
     select *
     from {{ ref('int_olist__order_details') }}
 
+    {% if is_incremental() %}
+    where loaded_at > (
+        select coalesce(max(loaded_at), '1900-01-01'::timestamp)
+        from {{ this }}
+    )
+    {% endif %}
 ),
 
 final as (
@@ -21,6 +32,7 @@ final as (
         -- timestamps
         order_purchased_at,
         order_delivered_at,
+        loaded_at,
 
         -- revenue metrics
         item_price,
